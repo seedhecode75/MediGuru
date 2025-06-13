@@ -1,10 +1,16 @@
 {
   "name": "mediguru",
   "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "start": "vercel dev"
   },
-  "dependencies": {},
+  "dependencies": {
+    "node-fetch": "^3.3.0"
+  },
   "devDependencies": {
     "vercel": "^28.16.11"
   }
