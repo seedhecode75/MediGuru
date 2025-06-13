@@ -1,17 +1,4 @@
-
-let fetch;
-
-
-async function initializeFetch() {
-  if (!fetch) {
-    const module = await import('node-fetch');
-    fetch = module.default;
-  }
-}
-
 export default async function handler(req, res) {
-
-  await initializeFetch();
   
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST');
@@ -40,6 +27,7 @@ export default async function handler(req, res) {
     
     while (retries < MAX_RETRIES) {
       try {
+        
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), HF_TIMEOUT);
 
@@ -63,6 +51,7 @@ export default async function handler(req, res) {
             signal: controller.signal
           }
         );
+        
         
         clearTimeout(timeoutId);
         
@@ -117,7 +106,6 @@ export default async function handler(req, res) {
     
   } catch (error) {
     console.error('Final API Error:', error);
-    const errorMessage = error.message || 'Internal server error';
     
     return res.status(500).json({ 
       reply: "⚠️ Our medical assistant is currently unavailable. Please try again later."
