@@ -25,14 +25,15 @@ export default async function handler(req, res) {
       reply: "⚠️ Server configuration error. Please contact support."
     });
   }
+  const testResult = await testConnection();
+  console.log("Hugging Face Connection Test:", testResult);
 
   try {
     let retries = 0;
     let responseData;
-    const MAX_RETRIES = 3;
-    const INITIAL_DELAY = 2000;
-    const HF_TIMEOUT = 30000; 
-    const HF_API_URL = "https://api-inference.huggingface.co/models/epfl-llm/medalpaca-7b";
+    const MAX_RETRIES = 2; // Reduce retries
+    const INITIAL_DELAY = 5000; // Increase delay
+    const HF_API_URL = "https://medalpaca-7b.hf.space/run/predict";
     
     
     const formattedPrompt = `### Instruction:\n${message}\n\n### Response:\n`;
