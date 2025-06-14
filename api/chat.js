@@ -18,12 +18,25 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid message format' });
   }
 
+  
+  if (!process.env.HUGGINGFACE_TOKEN) {
+    console.error('Hugging Face token is missing!');
+    return res.status(500).json({ 
+      reply: "⚠️ Server configuration error. Please contact support."
+    });
+  }
+
   try {
     let retries = 0;
     let responseData;
     const MAX_RETRIES = 3;
     const INITIAL_DELAY = 2000;
-    const HF_TIMEOUT = 15000;
+    const HF_TIMEOUT = 30000; 
+    const HF_API_URL = "https://api-inference.huggingface.co/models/epfl-llm/medalpaca-7b";
+    
+    
+    const formattedPrompt = `### Instruction:\n${message}\n\n### Response:\n`;
+    console.log(`Sending to MedAlpaca: ${formattedPrompt}`);
     
     while (retries < MAX_RETRIES) {
       try {
@@ -32,7 +45,7 @@ export default async function handler(req, res) {
         const timeoutId = setTimeout(() => controller.abort(), HF_TIMEOUT);
 
         const hfResponse = await fetch(
-          'https://api-inference.huggingface.co/models/gabbar427/mediguide',
+          HF_API_URL,
           {
             method: 'POST',
             headers: {
@@ -40,9 +53,9 @@ export default async function handler(req, res) {
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-              inputs: message,
+              inputs: formattedPrompt,
               parameters: {
-                max_length: 200,
+                max_new_tokens: 150, 
                 temperature: 0.7,
                 repetition_penalty: 1.2,
                 return_full_text: false
@@ -56,10 +69,13 @@ export default async function handler(req, res) {
         clearTimeout(timeoutId);
         
         if (!hfResponse.ok) {
+          const errorText = await hfResponse.text();
+          console.error(`MedAlpaca API error: ${hfResponse.status} - ${errorText}`);
+          
           if (hfResponse.status === 503) {
             const errorData = await hfResponse.json();
             if (errorData.estimated_time) {
-              const waitTime = Math.ceil(errorData.estimated_time * 1000) + 2000;
+              const waitTime = Math.ceil(errorData.estimated_time * 1000) + 5000; 
               console.log(`Model loading - waiting ${waitTime}ms`);
               await new Promise(resolve => setTimeout(resolve, waitTime));
               retries++;
@@ -67,11 +83,11 @@ export default async function handler(req, res) {
             }
           }
           
-          const errorText = await hfResponse.text();
-          throw new Error(`HuggingFace API error: ${hfResponse.status} - ${errorText}`);
+          throw new Error(`MedAlpaca API error: ${hfResponse.status} - ${errorText}`);
         }
 
         responseData = await hfResponse.json();
+        console.log('Received response:', JSON.stringify(responseData, null, 2));
         break;
         
       } catch (error) {
@@ -96,10 +112,17 @@ export default async function handler(req, res) {
     }
 
     if (!Array.isArray(responseData) || responseData.length === 0) {
-      throw new Error('Invalid response format from Hugging Face API');
+      throw new Error('Invalid response format from MedAlpaca API');
     }
     
-    const generatedText = responseData[0]?.generated_text || "I couldn't process that request.";
+    
+    let generatedText = responseData[0]?.generated_text || "I couldn't process that request.";
+    
+    
+    if (generatedText.includes("### Response:")) {
+      generatedText = generatedText.split("### Response:")[1].trim();
+    }
+    
     const safeReply = sanitizeMedicalResponse(generatedText);
     
     return res.status(200).json({ reply: safeReply });
@@ -136,7 +159,7 @@ function sanitizeMedicalResponse(text) {
   const highRiskKeywords = [
     'diagnos', 'treat', 'cure', 'medication', 
     'dose', 'prescription', 'cancer', 'heart attack',
-    'emergency', 'pregnant'
+    'emergency', 'pregnant', 'surgery', 'disease'
   ];
   
   if (blockedPatterns.some(pattern => pattern.test(truncated))) {
