@@ -18,26 +18,26 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid message format' });
   }
 
-  
+  // Verify token is present
   if (!process.env.HUGGINGFACE_TOKEN) {
     console.error('Hugging Face token is missing!');
     return res.status(500).json({ 
       reply: "⚠️ Server configuration error. Please contact support."
     });
   }
-  const testResult = await testConnection();
-  console.log("Hugging Face Connection Test:", testResult);
 
   try {
     let retries = 0;
     let responseData;
-    const MAX_RETRIES = 2; // Reduce retries
-    const INITIAL_DELAY = 5000; // Increase delay
-    const HF_API_URL = "https://medalpaca-7b.hf.space/run/predict";
+    const MAX_RETRIES = 3;
+    const INITIAL_DELAY = 2000;
+    const HF_TIMEOUT = 30000;
+   
+    const HF_API_URL = "https://api-inference.huggingface.co/models/epfl-llm/meditron-7b";
     
-    
-    const formattedPrompt = `### Instruction:\n${message}\n\n### Response:\n`;
-    console.log(`Sending to MedAlpaca: ${formattedPrompt}`);
+    // Format prompt
+    const formattedPrompt = `Question: ${message}\nAnswer:`;
+    console.log(`Sending to medical API: ${formattedPrompt}`);
     
     while (retries < MAX_RETRIES) {
       try {
@@ -56,7 +56,7 @@ export default async function handler(req, res) {
             body: JSON.stringify({
               inputs: formattedPrompt,
               parameters: {
-                max_new_tokens: 150, 
+                max_new_tokens: 150,
                 temperature: 0.7,
                 repetition_penalty: 1.2,
                 return_full_text: false
@@ -71,12 +71,12 @@ export default async function handler(req, res) {
         
         if (!hfResponse.ok) {
           const errorText = await hfResponse.text();
-          console.error(`MedAlpaca API error: ${hfResponse.status} - ${errorText}`);
+          console.error(`Medical API error: ${hfResponse.status} - ${errorText}`);
           
           if (hfResponse.status === 503) {
             const errorData = await hfResponse.json();
             if (errorData.estimated_time) {
-              const waitTime = Math.ceil(errorData.estimated_time * 1000) + 5000; 
+              const waitTime = Math.ceil(errorData.estimated_time * 1000) + 5000;
               console.log(`Model loading - waiting ${waitTime}ms`);
               await new Promise(resolve => setTimeout(resolve, waitTime));
               retries++;
@@ -84,7 +84,7 @@ export default async function handler(req, res) {
             }
           }
           
-          throw new Error(`MedAlpaca API error: ${hfResponse.status} - ${errorText}`);
+          throw new Error(`Medical API error: ${hfResponse.status} - ${errorText}`);
         }
 
         responseData = await hfResponse.json();
@@ -113,15 +113,15 @@ export default async function handler(req, res) {
     }
 
     if (!Array.isArray(responseData) || responseData.length === 0) {
-      throw new Error('Invalid response format from MedAlpaca API');
+      throw new Error('Invalid response format from Medical API');
     }
     
-    
+    // Extract generated text
     let generatedText = responseData[0]?.generated_text || "I couldn't process that request.";
     
-    
-    if (generatedText.includes("### Response:")) {
-      generatedText = generatedText.split("### Response:")[1].trim();
+    // Clean up response
+    if (generatedText.includes("Answer:")) {
+      generatedText = generatedText.split("Answer:")[1].trim();
     }
     
     const safeReply = sanitizeMedicalResponse(generatedText);
