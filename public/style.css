@@ -132,6 +132,27 @@
             max-width: 800px;
             margin: 0 auto;
         }
+        #connection-status {
+                    padding: 8px 15px;
+                    background: #1a1a1a;
+                    border-bottom: 1px solid var(--border);
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    font-size: 0.9rem;
+                    color: var(--text-light);
+        }
+        .status-indicator {
+                display: inline-block;
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                background: var(--warning);
+        
+        }
+        .status-indicator.connected {
+                background: var(--primary);
+        }
         
         .hero h1 {
             font-family: 'Montserrat', sans-serif;
