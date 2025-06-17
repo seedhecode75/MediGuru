@@ -1,4 +1,25 @@
 document.addEventListener('DOMContentLoaded', function() {
+const connectionStatus = document.querySelector('#connection-status .status-text');
+const statusIndicator = document.querySelector('#connection-status .status-indicator');
+
+async function checkServerStatus() {
+    try {
+        const response = await fetch('http://localhost:5000/status');
+        if (response.ok) {
+            connectionStatus.textContent = "Connected to medical AI";
+            statusIndicator.classList.add('connected');
+            return true;
+        }
+    } catch (e) {
+        console.log("Bridge server not responding");
+    }
+    
+    connectionStatus.textContent = "Medical AI offline - running in demo mode";
+    return false;
+}
+
+
+checkServerStatus();
     const chatMessages = document.getElementById('chat-messages');
     const userInput = document.getElementById('user-input');
     const sendBtn = document.getElementById('send-btn');
