@@ -5,20 +5,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function checkServerStatus() {
         try {
-            const response = await fetch('http://localhost:5000/status', { 
+            const response = await fetch('/api/status', { 
                 method: 'GET',
                 cache: 'no-cache'
             });
-            if (response.ok) {
+            
+            const data = await response.json();
+            
+            if (response.ok && data.status === "active") {
                 connectionStatus.textContent = "Connected to medical AI";
                 statusIndicator.classList.add('connected');
                 isServerOnline = true;
                 return true;
             } else {
-                throw new Error('Status not OK');
+                throw new Error('Medical AI offline');
             }
         } catch (e) {
-            console.log("Bridge server not responding");
+            console.log("Medical AI not responding");
             connectionStatus.textContent = "Medical AI offline - running in demo mode";
             statusIndicator.classList.remove('connected');
             isServerOnline = false;
@@ -88,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         try {
-            const response = await fetch('http://localhost:5000/ask', {
+            const response = await fetch('/api/ask', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -101,10 +104,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             const data = await response.json();
-            return data.response || data.error;
+            return data.response || data.error || "No response from AI";
         } catch (error) {
-            console.error('Fetch error:', error);
-            return "⚠️ I'm having trouble connecting to the medical AI. Please ensure the bridge server is running.";
+            console.error('Medical AI error:', error);
+            return "⚠️ Medical AI is currently unavailable. Using demo mode.";
         }
     }
     
@@ -131,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateMessage(messageId, response);
             } catch (error) {
                 console.error('Error:', error);
-                updateMessage(messageId, "⚠️ Error processing your request");
+                updateMessage(messageId, "⚠️ Error processing your request. Using demo mode.");
             } finally {
                 userInput.disabled = false;
                 sendBtn.disabled = false;
