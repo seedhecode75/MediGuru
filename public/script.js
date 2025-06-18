@@ -1,25 +1,37 @@
 document.addEventListener('DOMContentLoaded', function() {
-const connectionStatus = document.querySelector('#connection-status .status-text');
-const statusIndicator = document.querySelector('#connection-status .status-indicator');
+    const connectionStatus = document.querySelector('#connection-status .status-text');
+    const statusIndicator = document.querySelector('#connection-status .status-indicator');
+    let isServerOnline = false;
 
-async function checkServerStatus() {
-    try {
-        const response = await fetch('http://localhost:5000/status');
-        if (response.ok) {
-            connectionStatus.textContent = "Connected to medical AI";
-            statusIndicator.classList.add('connected');
-            return true;
+    async function checkServerStatus() {
+        try {
+            const response = await fetch('http://localhost:5000/status', { 
+                method: 'GET',
+                cache: 'no-cache'
+            });
+            if (response.ok) {
+                connectionStatus.textContent = "Connected to medical AI";
+                statusIndicator.classList.add('connected');
+                isServerOnline = true;
+                return true;
+            } else {
+                throw new Error('Status not OK');
+            }
+        } catch (e) {
+            console.log("Bridge server not responding");
+            connectionStatus.textContent = "Medical AI offline - running in demo mode";
+            statusIndicator.classList.remove('connected');
+            isServerOnline = false;
+            return false;
         }
-    } catch (e) {
-        console.log("Bridge server not responding");
     }
-    
-    connectionStatus.textContent = "Medical AI offline - running in demo mode";
-    return false;
-}
 
+    // Initial check
+    checkServerStatus();
 
-checkServerStatus();
+    // Periodically check every 30 seconds
+    setInterval(checkServerStatus, 30000);
+
     const chatMessages = document.getElementById('chat-messages');
     const userInput = document.getElementById('user-input');
     const sendBtn = document.getElementById('send-btn');
@@ -50,7 +62,31 @@ checkServerStatus();
         }
     }
 
+    function getDemoResponse(question) {
+        const responses = {
+            "hi": "Hello! I'm MediAssist, your AI medical assistant. How can I help with your health concerns today?",
+            "symptoms of flu": "Common flu symptoms include:\n\n• Fever\n• Chills\n• Cough\n• Sore throat\n• Runny or stuffy nose\n• Muscle or body aches\n• Headaches\n• Fatigue\n\nIf symptoms are severe, please consult a healthcare professional.",
+            "what is diabetes": "Diabetes is a chronic health condition that affects how your body turns food into energy. There are three main types:\n\n1. Type 1 diabetes: An autoimmune condition\n2. Type 2 diabetes: Often related to lifestyle factors\n3. Gestational diabetes: Occurs during pregnancy\n\nProper management includes medication, diet, exercise, and regular monitoring.",
+            "how to lower blood pressure": "To help lower blood pressure:\n\n• Reduce sodium intake\n• Exercise regularly\n• Maintain a healthy weight\n• Limit alcohol consumption\n• Manage stress\n• Quit smoking\n• Take prescribed medications as directed\n\nAlways consult with your doctor before making significant lifestyle changes.",
+            "covid prevention": "To prevent COVID-19 infection:\n\n• Get vaccinated and boosted\n• Wear masks in crowded places\n• Practice good hand hygiene\n• Maintain physical distance\n• Improve ventilation indoors\n• Stay home if you feel unwell\n• Follow local public health guidelines"
+        };
+        
+        const lowerQuestion = question.toLowerCase();
+        
+        for (const key in responses) {
+            if (lowerQuestion.includes(key)) {
+                return responses[key];
+            }
+        }
+        
+        return "I can provide information on a wide range of medical topics. Could you please be more specific about your health concern?";
+    }
+
     async function getAIResponse(question) {
+        if (!isServerOnline) {
+            return getDemoResponse(question);
+        }
+        
         try {
             const response = await fetch('http://localhost:5000/ask', {
                 method: 'POST',
@@ -87,7 +123,6 @@ checkServerStatus();
             userInput.disabled = true;
             sendBtn.disabled = true;
             
-            
             const messageId = 'msg-' + Date.now();
             addMessage("Analyzing your medical question...", false, messageId);
             
@@ -104,7 +139,6 @@ checkServerStatus();
             }
         }
     }
-    
     
     setTimeout(() => {
         addMessage("Hello! I'm MediGuru, your medical information assistant. I can provide information on symptoms, conditions, treatments, and preventive care. How may I assist you today? Remember: I provide informational support only, not medical advice.", false);
