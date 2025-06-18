@@ -107,7 +107,7 @@ checkServerStatus();
     
     
     setTimeout(() => {
-        addMessage("Hello! I'm MediGuide, your medical information assistant. I can provide information on symptoms, conditions, treatments, and preventive care. How may I assist you today? Remember: I provide informational support only, not medical advice.", false);
+        addMessage("Hello! I'm MediGuru, your medical information assistant. I can provide information on symptoms, conditions, treatments, and preventive care. How may I assist you today? Remember: I provide informational support only, not medical advice.", false);
     }, 500);
 });
 
