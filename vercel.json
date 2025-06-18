@@ -1,26 +1,34 @@
 {
+  "builds": [
+    {
+      "src": "api/*.js",
+      "use": "@vercel/node"
+    }
+  ],
   "routes": [
     {
-      "src": "/",
-      "dest": "/public/index.html"
-    },
-    {
-      "src": "/api/chat",
-      "dest": "/api/chat.js",
-      "methods": ["POST"]
-    },
-    {
-      "src": "/(.*\\.(css|js))",
-      "dest": "/public/$1"
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "/public/index.html"
+      "dest": "/public/$1"
     }
   ],
-  "functions": {
-    "api/chat.js": {
-      "maxDuration": 30
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/public/index.html"
     }
-  }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "POST, GET, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
+      ]
+    }
+  ]
 }
