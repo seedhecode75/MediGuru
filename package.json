@@ -1,19 +1,15 @@
 {
-  "name": "medical-chatbot",
+  "name": "medi-guru",
   "version": "1.0.0",
-  "description": "Medical AI Chatbot with Vercel Serverless Functions",
+  "description": "Medical AI Chatbot",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
-  },
-  "dependencies": {
-    "next": "^14.1.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "node-fetch": "^3.3.2"
+    "dev": "echo \"Run frontend with live server and backend separately\"" ,
+    "build": "echo \"No build required for static site\""
   },
   "engines": {
     "node": ">=18.x"
+  },
+  "dependencies": {
+    "@vercel/node": "^4.0.0"
   }
 }
