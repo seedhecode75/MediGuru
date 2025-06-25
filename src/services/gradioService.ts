@@ -1,7 +1,7 @@
 import { Client } from "@gradio/client";
 
 let client: any = null;
-const GRADIO_URL = "https://cbee2e320f6f9b783a.gradio.live/";
+const GRADIO_URL = "https://e23253cdbc2cee87ab.gradio.live/";
 
 export const connectToGradio = async (): Promise<void> => {
   try {
