@@ -7,7 +7,11 @@
 
 MediGuru is an AI-powered medical chatbot that provides reliable medical information using prompt-tuned language models specialized for healthcare domain.
 
-[![MediGuru Demo Thumbnail](https://via.placeholder.com/800x450?text=MediGuru+Demo+Video)](https://youtube.com/demo-link)
+## MediGuru Demo
+
+https://github.com/user-attachments/assets/4d112bbe-9f9e-446c-ac33-b3acb20fe076
+
+
 *Click image to watch demo video*
 
 ## 🔍 Overview
